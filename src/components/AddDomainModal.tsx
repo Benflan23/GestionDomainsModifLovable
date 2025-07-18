@@ -21,8 +21,8 @@ const AddDomainModal: React.FC<AddDomainModalProps> = ({
   onClose,
   onSave,
   domain,
-  registrars,
-  categories
+  registrars = [],
+  categories = []
 }) => {
   const [formData, setFormData] = useState<{
     name: string;

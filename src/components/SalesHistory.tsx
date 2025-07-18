@@ -31,7 +31,7 @@ const SalesHistory: React.FC<SalesHistoryProps> = ({ sales }) => {
     document.body.removeChild(link);
   };
 
-  const totalSales = sales.reduce((sum, sale) => sum + parseInt(sale.sellingPrice), 0);
+  const totalSales = sales.reduce((sum, sale) => sum + sale.sellingPrice, 0);
   const averageSale = sales.length > 0 ? totalSales / sales.length : 0;
 
   return (

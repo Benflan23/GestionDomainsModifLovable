@@ -24,6 +24,9 @@ export interface Domain {
   expirationDate: string;
   status: 'actif' | 'vendu' | 'expire' | 'en-vente';
   purchasePrice?: number;
+  sellingPrice?: number;
+  saleDate?: string;
+  buyer?: string;
 }
 
 export interface Evaluation {
@@ -49,9 +52,9 @@ const Index = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingDomain, setEditingDomain] = useState<Domain | null>(null);
   const [customLists, setCustomLists] = useState({
-    registrars: [],
-    categories: [],
-    evaluationTools: []
+    registrars: ['GoDaddy', 'Namecheap', 'Google Domains'],
+    categories: ['Business', 'Tech', 'Entertainment'],
+    evaluationTools: ['Estibot', 'GoDaddy', 'Sedo']
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

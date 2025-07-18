@@ -9,14 +9,14 @@ interface DashboardProps {
   sales: Sale[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ domains, sales }) => {
+const Dashboard: React.FC<DashboardProps> = ({ domains = [], sales = [] }) => {
   const totalDomains = domains.length;
   const soldDomains = domains.filter(d => d.status === 'vendu').length;
   const totalInvestment = domains.reduce((sum, d) => sum + (d.purchasePrice || 0), 0);
   const totalSales = sales.reduce((sum, s) => sum + s.sellingPrice, 0);
-  const roi = totalInvestment > 0 ? ((parseInt(totalSales) - totalInvestment) / totalInvestment) * 100 : 0;
+  const roi = totalInvestment > 0 ? ((totalSales - totalInvestment) / totalInvestment) * 100 : 0;
   const totalValue = domains.reduce((sum, d) => {
-    if (d.status === 'vendu') return sum + (parseInt(d.sellingPrice) || 0);
+    if (d.status === 'vendu') return sum + (d.sellingPrice || 0);
     return sum + (d.purchasePrice || 0) * 8; // Estimation basique
   }, 0);
 

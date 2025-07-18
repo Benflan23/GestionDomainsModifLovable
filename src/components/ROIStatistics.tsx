@@ -18,7 +18,7 @@ const COLORS = {
   expire: '#ef4444',
 };
 
-const formatCurrency = (value: number) => `${parseInt(value).toFixed(0)}€`;
+const formatCurrency = (value: number) => `${value.toFixed(0)}€`;
 
 const CardInfo = ({
   title,
@@ -40,8 +40,8 @@ const CardInfo = ({
 );
 
 const ROIStatistics: React.FC<ROIStatisticsProps> = ({ domains, sales }) => {
-  const totalPurchased = domains.reduce((sum, d) => sum + (parseInt(d.purchasePrice) || 0), 0);
-  const totalSold = sales.reduce((sum, s) => sum + parseInt(s.sellingPrice), 0);
+  const totalPurchased = domains.reduce((sum, d) => sum + (d.purchasePrice || 0), 0);
+  const totalSold = sales.reduce((sum, s) => sum + s.sellingPrice, 0);
   const roi = totalPurchased > 0 ? ((totalSold - totalPurchased) / totalPurchased) * 100 : 0;
   const averageValue = domains.length > 0 ? totalPurchased / domains.length : 0;
 
