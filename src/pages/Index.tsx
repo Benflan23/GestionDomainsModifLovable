@@ -124,16 +124,54 @@ const Index = () => {
   };
 
   const deleteDomain = async (id: string) => {
-  try {
-    await api.delete(`/domains/${id}`);
-    // Use functional update
-    setDomains(prev => prev.filter(domain => domain.id !== id));
-    return true;
-  } catch (err) {
-    console.error('Error deleting domain:', err);
-    return false;
-  }
-};
+    try {
+      await api.delete(`/domains/${id}`);
+      // Use functional update
+      setDomains(prev => prev.filter(domain => domain.id !== id));
+      return true;
+    } catch (err) {
+      console.error('Error deleting domain:', err);
+      return false;
+    }
+  };
+
+  const bulkDeleteDomains = async (ids: string[]) => {
+    try {
+      // Delete each domain individually or implement bulk delete endpoint
+      await Promise.all(ids.map(id => api.delete(`/domains/${id}`)));
+      setDomains(prev => prev.filter(domain => !ids.includes(domain.id)));
+      return true;
+    } catch (err) {
+      console.error('Error bulk deleting domains:', err);
+      return false;
+    }
+  };
+
+  const bulkUpdateDomains = async (ids: string[], updates: Partial<Domain>) => {
+    try {
+      // Update each domain individually or implement bulk update endpoint
+      const updatePromises = ids.map(async (id) => {
+        const domain = domains.find(d => d.id === id);
+        if (domain) {
+          const updatedDomain = { ...domain, ...updates };
+          await api.put(`/domains/${id}`, updatedDomain);
+          return updatedDomain;
+        }
+        return null;
+      });
+
+      const updatedDomains = await Promise.all(updatePromises);
+      
+      setDomains(prev => prev.map(domain => {
+        const updated = updatedDomains.find(u => u?.id === domain.id);
+        return updated || domain;
+      }));
+      return true;
+    } catch (err) {
+      console.error('Error bulk updating domains:', err);
+      return false;
+    }
+  };
 
   const addEvaluation = async (evaluation: Omit<Evaluation, 'id'>) => {
     try {
@@ -200,7 +238,11 @@ const Index = () => {
               domains={domains}
               onEdit={setEditingDomain}
               onDelete={deleteDomain}
+              onBulkDelete={bulkDeleteDomains}
+              onBulkUpdate={bulkUpdateDomains}
               onAdd={() => setIsAddModalOpen(true)}
+              registrars={customLists.registrars}
+              categories={customLists.categories}
             />
           </TabsContent>
 
