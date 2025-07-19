@@ -37,7 +37,9 @@ const DomainFilters: React.FC<DomainFiltersProps> = ({
   const hasActiveFilters = Object.values(filters).some(value => value !== '');
 
   const updateFilter = (key: keyof DomainFiltersState, value: string) => {
-    onFiltersChange({ ...filters, [key]: value });
+    // Convert special "__all__" value back to empty string for filtering logic
+    const filterValue = value === '__all__' ? '' : value;
+    onFiltersChange({ ...filters, [key]: filterValue });
   };
 
   return (
@@ -72,12 +74,12 @@ const DomainFilters: React.FC<DomainFiltersProps> = ({
 
           <div>
             <Label htmlFor="status">Statut</Label>
-            <Select value={filters.status} onValueChange={(value) => updateFilter('status', value)}>
+            <Select value={filters.status || '__all__'} onValueChange={(value) => updateFilter('status', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Tous les statuts" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="__all__">Tous les statuts</SelectItem>
                 {availableStatuses.map((status) => (
                   <SelectItem key={status} value={status}>
                     {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -89,12 +91,12 @@ const DomainFilters: React.FC<DomainFiltersProps> = ({
 
           <div>
             <Label htmlFor="registrar">Registrar</Label>
-            <Select value={filters.registrar} onValueChange={(value) => updateFilter('registrar', value)}>
+            <Select value={filters.registrar || '__all__'} onValueChange={(value) => updateFilter('registrar', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Tous les registrars" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les registrars</SelectItem>
+                <SelectItem value="__all__">Tous les registrars</SelectItem>
                 {availableRegistrars.map((registrar) => (
                   <SelectItem key={registrar} value={registrar}>
                     {registrar}
@@ -106,12 +108,12 @@ const DomainFilters: React.FC<DomainFiltersProps> = ({
 
           <div>
             <Label htmlFor="category">Catégorie</Label>
-            <Select value={filters.category} onValueChange={(value) => updateFilter('category', value)}>
+            <Select value={filters.category || '__all__'} onValueChange={(value) => updateFilter('category', value)}>
               <SelectTrigger>
                 <SelectValue placeholder="Toutes les catégories" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les catégories</SelectItem>
+                <SelectItem value="__all__">Toutes les catégories</SelectItem>
                 {availableCategories.map((category) => (
                   <SelectItem key={category} value={category}>
                     {category}
