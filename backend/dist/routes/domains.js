@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const database_1 = __importDefault(require("../database"));
+const auth_1 = require("./auth");
 /**
  * Helpers
  */
@@ -27,14 +28,14 @@ const router = (0, express_1.Router)();
 // ────────────────────────────────────────────────────────────────────────────────
 // GET /api/domains → list all domains
 // ────────────────────────────────────────────────────────────────────────────────
-router.get('/', asyncRoute(async (_req, res) => {
+router.get('/', auth_1.authenticateToken, asyncRoute(async (_req, res) => {
     const [rows] = await database_1.default.query(`SELECT ${SELECT_COLUMNS} FROM domains ORDER BY id DESC`);
     res.json(rows);
 }));
 // ────────────────────────────────────────────────────────────────────────────────
 // POST /api/domains → add new domain (with optional sale record)
 // ────────────────────────────────────────────────────────────────────────────────
-router.post('/', asyncRoute(async (req, res) => {
+router.post('/', auth_1.authenticateToken, asyncRoute(async (req, res) => {
     const domain = req.body;
     let conn;
     try {
@@ -74,7 +75,7 @@ router.post('/', asyncRoute(async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────────
 // PUT /api/domains/:id → update domain & sale record
 // ────────────────────────────────────────────────────────────────────────────────
-router.put('/:id', asyncRoute(async (req, res) => {
+router.put('/:id', auth_1.authenticateToken, asyncRoute(async (req, res) => {
     const domainId = Number(req.params.id);
     const domain = req.body;
     let conn;
@@ -106,7 +107,7 @@ router.put('/:id', asyncRoute(async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────────
 // DELETE /api/domains/:id → cascade delete domain & its evaluations
 // ────────────────────────────────────────────────────────────────────────────────
-router.delete('/:id', asyncRoute(async (req, res) => {
+router.delete('/:id', auth_1.authenticateToken, asyncRoute(async (req, res) => {
     const domainId = Number(req.params.id);
     let conn;
     try {

@@ -5,9 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const database_1 = __importDefault(require("../database"));
+const auth_1 = require("./auth");
 const router = (0, express_1.Router)();
 // Get all sales with domain details
-router.get('/', async (req, res) => {
+router.get('/', auth_1.authenticateToken, async (req, res) => {
     try {
         const [rows] = await database_1.default.query(`
       SELECT 

@@ -7,12 +7,22 @@ import EvaluationSection from '@/components/EvaluationSection';
 import ROIStatistics from '@/components/ROIStatistics';
 import SalesHistory from '@/components/SalesHistory';
 import Settings from '@/components/Settings';
+import UserMenu from '@/components/UserMenu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import axios from 'axios';
 
-// API Service
+// API Service avec token d'authentification
 const api = axios.create({
   baseURL: `${window.location.origin}/api/`,
+});
+
+// Interceptor pour ajouter le token aux requêtes
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('auth_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export interface Domain {
@@ -242,13 +252,16 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-2 sm:px-4 py-4 sm:py-8">
-        <div className="mb-4 sm:mb-8">
-          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
-            Gestion de Domaines
-          </h1>
-          <p className="text-sm sm:text-lg text-gray-600">
-            Gérez votre portefeuille de noms de domaine efficacement
-          </p>
+        <div className="mb-4 sm:mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
+              Gestion de Domaines
+            </h1>
+            <p className="text-sm sm:text-lg text-gray-600">
+              Gérez votre portefeuille de noms de domaine efficacement
+            </p>
+          </div>
+          <UserMenu />
         </div>
 
         <Tabs defaultValue="dashboard" className="space-y-4 sm:space-y-6">
