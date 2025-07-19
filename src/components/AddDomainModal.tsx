@@ -6,14 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Domain } from '@/pages/Index';
+import { useToast } from '@/hooks/use-toast';
 
 interface AddDomainModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (domain: Domain | Omit<Domain, 'id'>) => void;
+  onSave: (domain: Domain | Omit<Domain, 'id'>) => Promise<{ success: boolean; error?: string }>;
   domain?: Domain | null;
   registrars: string[];
   categories: string[];
+  existingDomains?: Domain[];
 }
 
 const AddDomainModal: React.FC<AddDomainModalProps> = ({
@@ -22,8 +24,10 @@ const AddDomainModal: React.FC<AddDomainModalProps> = ({
   onSave,
   domain,
   registrars = [],
-  categories = []
+  categories = [],
+  existingDomains = []
 }) => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState<{
     name: string;
     registrar: string;
@@ -93,14 +97,48 @@ const AddDomainModal: React.FC<AddDomainModalProps> = ({
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (domain) {
-      onSave({ ...formData, id: domain.id });
-    } else {
-      onSave(formData);
+    
+    // Check for duplicates only when adding new domain
+    if (!domain) {
+      const existingDomain = existingDomains.find(
+        d => d.name.toLowerCase() === formData.name.toLowerCase()
+      );
+      
+      if (existingDomain) {
+        toast({
+          title: "Domaine déjà existant",
+          description: `Le domaine "${formData.name}" existe déjà dans votre portefeuille.`,
+          variant: "destructive"
+        });
+        return;
+      }
     }
-    onClose();
+    
+    try {
+      const result = await onSave(domain ? { ...formData, id: domain.id } : formData);
+      
+      if (result.success) {
+        toast({
+          title: domain ? "Domaine modifié" : "Domaine ajouté",
+          description: domain ? "Le domaine a été modifié avec succès." : "Le domaine a été ajouté avec succès."
+        });
+        onClose();
+      } else {
+        toast({
+          title: "Erreur",
+          description: result.error || "Une erreur est survenue.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Une erreur inattendue est survenue.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (

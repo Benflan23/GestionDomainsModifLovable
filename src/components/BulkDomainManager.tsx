@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface BulkDomainManagerProps {
   domains: Domain[];
-  onImportDomains: (domains: Omit<Domain, 'id'>[]) => void;
+  onImportDomains: (domains: Omit<Domain, 'id'>[]) => Promise<{ success: boolean; addedCount: number; errors: string[] }>;
   registrars: string[];
   categories: string[];
 }
@@ -51,12 +51,12 @@ const BulkDomainManager: React.FC<BulkDomainManagerProps> = ({
     });
   };
 
-  const handleFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer);
         const workbook = XLSX.read(data, { type: 'array' });
@@ -87,12 +87,30 @@ const BulkDomainManager: React.FC<BulkDomainManagerProps> = ({
           };
         }).filter(domain => domain.name);
 
-        onImportDomains(importedDomains);
+        const result = await onImportDomains(importedDomains);
         
-        toast({
-          title: "Import réussi",
-          description: `${importedDomains.length} domaines importés depuis Excel`
-        });
+        if (result.success) {
+          toast({
+            title: "Import réussi",
+            description: `${result.addedCount} domaines importés depuis Excel` + 
+              (result.errors.length > 0 ? ` (${result.errors.length} erreurs)` : '')
+          });
+          
+          if (result.errors.length > 0) {
+            toast({
+              title: "Erreurs d'import",
+              description: result.errors.slice(0, 3).join('\n') + 
+                (result.errors.length > 3 ? `\n... et ${result.errors.length - 3} autres erreurs` : ''),
+              variant: "destructive"
+            });
+          }
+        } else {
+          toast({
+            title: "Échec de l'import",
+            description: result.errors.join('\n'),
+            variant: "destructive"
+          });
+        }
         
         // Reset input
         event.target.value = '';
@@ -107,7 +125,7 @@ const BulkDomainManager: React.FC<BulkDomainManagerProps> = ({
     reader.readAsArrayBuffer(file);
   };
 
-  const handleBulkTextImport = () => {
+  const handleBulkTextImport = async () => {
     if (!bulkText.trim()) return;
 
     const lines = bulkText.trim().split('\n');
@@ -135,13 +153,31 @@ const BulkDomainManager: React.FC<BulkDomainManagerProps> = ({
     }).filter(Boolean) as Omit<Domain, 'id'>[];
 
     if (importedDomains.length > 0) {
-      onImportDomains(importedDomains);
+      const result = await onImportDomains(importedDomains);
       setBulkText('');
       
-      toast({
-        title: "Import réussi",
-        description: `${importedDomains.length} domaines ajoutés en bulk`
-      });
+      if (result.success) {
+        toast({
+          title: "Import réussi",
+          description: `${result.addedCount} domaines ajoutés en bulk` + 
+            (result.errors.length > 0 ? ` (${result.errors.length} erreurs)` : '')
+        });
+        
+        if (result.errors.length > 0) {
+          toast({
+            title: "Erreurs d'ajout",
+            description: result.errors.slice(0, 3).join('\n') + 
+              (result.errors.length > 3 ? `\n... et ${result.errors.length - 3} autres erreurs` : ''),
+            variant: "destructive"
+          });
+        }
+      } else {
+        toast({
+          title: "Échec de l'ajout",
+          description: result.errors.join('\n'),
+          variant: "destructive"
+        });
+      }
     }
   };
 

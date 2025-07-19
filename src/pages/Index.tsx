@@ -92,25 +92,73 @@ const Index = () => {
     try {
       const response = await api.post('/domains', domain);
       setDomains(prev => [response.data, ...prev]);
-      return true;
-    } catch (err) {
+      return { success: true };
+    } catch (err: any) {
       console.error('Error adding domain:', err);
-      return false;
+      if (err.response?.status === 409) {
+        return { 
+          success: false, 
+          error: err.response.data.message || 'Ce domaine existe déjà.' 
+        };
+      }
+      return { success: false, error: 'Erreur lors de l\'ajout du domaine.' };
     }
   };
 
   const addMultipleDomains = async (newDomains: Omit<Domain, 'id'>[]) => {
     try {
-      // Implement bulk import endpoint in backend for better performance
-      const results = await Promise.all(
-        newDomains.map(domain => api.post('/domains', domain))
-      );
+      const results = [];
+      const errors = [];
       
-      setDomains(prev => [...results.map(res => res.data), ...prev]);
-      return true;
+      // Check for duplicates in the current domains list and within the new domains
+      const existingNames = domains.map(d => d.name.toLowerCase());
+      const newDomainNames = newDomains.map(d => d.name.toLowerCase());
+      const duplicatesWithinNew = newDomainNames.filter((name, index) => newDomainNames.indexOf(name) !== index);
+      
+      for (const domain of newDomains) {
+        const domainName = domain.name.toLowerCase();
+        
+        // Check for duplicates within the new list
+        if (duplicatesWithinNew.includes(domainName)) {
+          errors.push(`Domaine en double dans la liste: ${domain.name}`);
+          continue;
+        }
+        
+        // Check if already exists in current domains
+        if (existingNames.includes(domainName)) {
+          errors.push(`Le domaine "${domain.name}" existe déjà.`);
+          continue;
+        }
+        
+        try {
+          const response = await api.post('/domains', domain);
+          results.push(response.data);
+          existingNames.push(domainName); // Add to prevent duplicates in the same batch
+        } catch (err: any) {
+          if (err.response?.status === 409) {
+            errors.push(err.response.data.message || `Le domaine "${domain.name}" existe déjà.`);
+          } else {
+            errors.push(`Erreur pour "${domain.name}": ${err.message}`);
+          }
+        }
+      }
+      
+      if (results.length > 0) {
+        setDomains(prev => [...results, ...prev]);
+      }
+      
+      return {
+        success: results.length > 0,
+        addedCount: results.length,
+        errors: errors
+      };
     } catch (err) {
       console.error('Error adding multiple domains:', err);
-      return false;
+      return {
+        success: false,
+        addedCount: 0,
+        errors: ['Erreur générale lors de l\'ajout des domaines.']
+      };
     }
   };
 
@@ -290,10 +338,17 @@ const Index = () => {
             setIsAddModalOpen(false);
             setEditingDomain(null);
           }}
-          onSave={editingDomain ? updateDomain : addDomain}
+          onSave={editingDomain ? 
+            async (domain) => {
+              const success = await updateDomain(domain as Domain);
+              return { success };
+            } : 
+            addDomain
+          }
           domain={editingDomain}
           registrars={customLists.registrars}
           categories={customLists.categories}
+          existingDomains={domains}
         />
       </div>
     </div>

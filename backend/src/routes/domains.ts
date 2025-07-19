@@ -40,6 +40,19 @@ router.get('/', asyncRoute(async (_req, res) => {
 router.post('/', asyncRoute(async (req, res) => {
   const domain: Omit<Domain, 'id'> = req.body;
 
+  // Check if domain already exists
+  const [existingDomains] = await pool.query<mysql.RowDataPacket[]>(
+    'SELECT id FROM domains WHERE name = ?', 
+    [domain.name]
+  );
+  
+  if (existingDomains.length > 0) {
+    return res.status(409).json({ 
+      error: 'DUPLICATE_DOMAIN', 
+      message: `Le domaine "${domain.name}" existe déjà dans votre portefeuille.` 
+    });
+  }
+
   let conn: mysql.PoolConnection | undefined;
   try {
     conn = await pool.getConnection();
