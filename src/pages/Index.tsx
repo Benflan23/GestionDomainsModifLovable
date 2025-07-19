@@ -69,10 +69,14 @@ const Index = () => {
           api.get('/settings')
         ]);
         
-        setDomains(domainsRes.data);
-        setEvaluations(evaluationsRes.data);
-        setCustomLists(settingsRes.data);
-        setSales(salesRes.data);
+        setDomains(Array.isArray(domainsRes.data) ? domainsRes.data : []);
+        setEvaluations(Array.isArray(evaluationsRes.data) ? evaluationsRes.data : []);
+        setCustomLists(settingsRes.data || {
+          registrars: ['GoDaddy', 'Namecheap', 'Google Domains'],
+          categories: ['Business', 'Tech', 'Entertainment'],
+          evaluationTools: ['Estibot', 'GoDaddy', 'Sedo']
+        });
+        setSales(Array.isArray(salesRes.data) ? salesRes.data : []);
       } catch (err) {
         setError('Failed to fetch data');
         console.error(err);

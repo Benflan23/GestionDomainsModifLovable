@@ -10,12 +10,16 @@ interface DashboardProps {
 }
 
 const Dashboard: React.FC<DashboardProps> = ({ domains = [], sales = [] }) => {
-  const totalDomains = domains.length;
-  const soldDomains = domains.filter(d => d.status === 'vendu').length;
-  const totalInvestment = domains.reduce((sum, d) => sum + (d.purchasePrice || 0), 0);
-  const totalSales = sales.reduce((sum, s) => sum + s.sellingPrice, 0);
+  // Ensure domains is always an array
+  const domainsList = Array.isArray(domains) ? domains : [];
+  const salesList = Array.isArray(sales) ? sales : [];
+  
+  const totalDomains = domainsList.length;
+  const soldDomains = domainsList.filter(d => d.status === 'vendu').length;
+  const totalInvestment = domainsList.reduce((sum, d) => sum + (d.purchasePrice || 0), 0);
+  const totalSales = salesList.reduce((sum, s) => sum + s.sellingPrice, 0);
   const roi = totalInvestment > 0 ? ((totalSales - totalInvestment) / totalInvestment) * 100 : 0;
-  const totalValue = domains.reduce((sum, d) => {
+  const totalValue = domainsList.reduce((sum, d) => {
     if (d.status === 'vendu') return sum + (d.sellingPrice || 0);
     return sum + (d.purchasePrice || 0) * 8; // Estimation basique
   }, 0);
