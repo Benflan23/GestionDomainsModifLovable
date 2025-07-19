@@ -25,7 +25,7 @@ interface SettingsProps {
   }) => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ customLists, onUpdateLists }) => {
+const Settings: React.FC<SettingsProps> = ({ customLists = { registrars: [], categories: [], evaluationTools: [] }, onUpdateLists }) => {
   const [newItems, setNewItems] = useState({
     registrar: '',
     category: '',
@@ -56,10 +56,11 @@ const Settings: React.FC<SettingsProps> = ({ customLists, onUpdateLists }) => {
   }, []);
 
   const addItem = useCallback(async (listType: 'registrars' | 'categories' | 'evaluationTools', value: string) => {
-    if (value.trim() && !customLists[listType].includes(value.trim())) {
+    const currentList = customLists[listType] || [];
+    if (value.trim() && !currentList.includes(value.trim())) {
       const newLists = {
         ...customLists,
-        [listType]: [...customLists[listType], value.trim()]
+        [listType]: [...currentList, value.trim()]
       };
       
       // Update local state
@@ -76,9 +77,10 @@ const Settings: React.FC<SettingsProps> = ({ customLists, onUpdateLists }) => {
   }, [customLists, onUpdateLists, saveSettingsToDB]);
 
   const removeItem = useCallback(async (listType: 'registrars' | 'categories' | 'evaluationTools', value: string) => {
+    const currentList = customLists[listType] || [];
     const newLists = {
       ...customLists,
-      [listType]: customLists[listType].filter(item => item !== value)
+      [listType]: currentList.filter(item => item !== value)
     };
     
     // Update local state
@@ -92,7 +94,7 @@ const Settings: React.FC<SettingsProps> = ({ customLists, onUpdateLists }) => {
   title: string;
   items: string[];
   listType: 'registrars' | 'categories' | 'evaluationTools';
-}> = React.memo(({ title, items, listType }) => {
+}> = React.memo(({ title, items = [], listType }) => {
   const [newValue, setNewValue] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -163,7 +165,7 @@ const Settings: React.FC<SettingsProps> = ({ customLists, onUpdateLists }) => {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {items.map((item) => (
+            {Array.isArray(items) && items.map((item) => (
               <Badge 
                 key={item} 
                 variant="secondary" 
@@ -182,7 +184,7 @@ const Settings: React.FC<SettingsProps> = ({ customLists, onUpdateLists }) => {
             ))}
           </div>
 
-          {items.length === 0 && (
+          {(!Array.isArray(items) || items.length === 0) && (
             <p className="text-gray-500 text-sm">Aucun élément configuré</p>
           )}
           
@@ -224,19 +226,19 @@ const Settings: React.FC<SettingsProps> = ({ customLists, onUpdateLists }) => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <ListManager
           title="Registrars"
-          items={customLists.registrars}
+          items={customLists?.registrars || []}
           listType="registrars"
         />
 
         <ListManager
           title="Catégories"
-          items={customLists.categories}
+          items={customLists?.categories || []}
           listType="categories"
         />
 
         <ListManager
           title="Outils d'Évaluation"
-          items={customLists.evaluationTools}
+          items={customLists?.evaluationTools || []}
           listType="evaluationTools"
         />
       </div>
