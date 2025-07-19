@@ -75,11 +75,11 @@ router.post('/', asyncRoute(async (req, res) => {
     const domainId = result.insertId;
 
     // 2️⃣ Optional sale record
-    if (domain.status === 'vendu') {
+    if (domain.status === 'vendu' && domain.saleDate && domain.sellingPrice) {
       await conn.query(
         `INSERT INTO sales (domain_id, sale_date, selling_price, buyer)
          VALUES (?, ?, ?, ?)`,
-        [domainId, domain.saleDate, domain.sellingPrice, domain.buyer],
+        [domainId, domain.saleDate, domain.sellingPrice, domain.buyer || null],
       );
     }
 
@@ -117,15 +117,16 @@ router.put('/:id', asyncRoute(async (req, res) => {
       [domain.name, domain.registrar, domain.category, domain.purchaseDate, domain.expirationDate, domain.status, domain.purchasePrice ?? null, domainId],
     );
 
-    if (domain.status === 'vendu') {
+    // Always delete existing sales records for this domain first
+    await conn.query('DELETE FROM sales WHERE domain_id = ?', [domainId]);
+    
+    // Then insert new sale record if status is 'vendu'
+    if (domain.status === 'vendu' && domain.saleDate && domain.sellingPrice) {
       await conn.query(
         `INSERT INTO sales (domain_id, sale_date, selling_price, buyer)
-         VALUES (?, ?, ?, ?)
-         ON DUPLICATE KEY UPDATE sale_date = VALUES(sale_date), selling_price = VALUES(selling_price), buyer = VALUES(buyer)`,
-        [domainId, domain.saleDate, domain.sellingPrice, domain.buyer],
+         VALUES (?, ?, ?, ?)`,
+        [domainId, domain.saleDate, domain.sellingPrice, domain.buyer || null],
       );
-    } else {
-      await conn.query('DELETE FROM sales WHERE domain_id = ?', [domainId]);
     }
 
     await conn.commit();
