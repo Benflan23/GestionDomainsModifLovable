@@ -16,10 +16,10 @@ interface EvaluationSectionProps {
 }
 
 const EvaluationSection: React.FC<EvaluationSectionProps> = ({
-  domains,
-  evaluations,
+  domains = [],
+  evaluations = [],
   onAddEvaluation,
-  evaluationTools
+  evaluationTools = []
 }) => {
   const [newEvaluation, setNewEvaluation] = useState({
     domainId: '',
@@ -42,6 +42,7 @@ const EvaluationSection: React.FC<EvaluationSectionProps> = ({
   };
 
   const getDomainName = (domainId: string) => {
+    if (!Array.isArray(domains)) return 'Domaine inconnu';
     const domain = domains.find(d => d.id === domainId);
     return domain ? domain.name : 'Domaine inconnu';
   };
@@ -64,7 +65,7 @@ const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                   <SelectValue placeholder="Sélectionnez un domaine" />
                 </SelectTrigger>
                 <SelectContent>
-                  {domains.filter(d => d.status !== 'vendu').map((domain) => (
+                  {Array.isArray(domains) && domains.filter(d => d.status !== 'vendu').map((domain) => (
                     <SelectItem key={domain.id} value={domain.id.toString()}>
                       {domain.name}
                     </SelectItem>
@@ -80,7 +81,7 @@ const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                   <SelectValue placeholder="Outil" />
                 </SelectTrigger>
                 <SelectContent>
-                  {evaluationTools.map((tool) => (
+                  {Array.isArray(evaluationTools) && evaluationTools.map((tool) => (
                     <SelectItem key={tool} value={tool}>
                       {tool}
                     </SelectItem>
@@ -140,7 +141,7 @@ const EvaluationSection: React.FC<EvaluationSectionProps> = ({
                 </tr>
               </thead>
               <tbody>
-                {evaluations.map((evaluation) => (
+                {Array.isArray(evaluations) && evaluations.map((evaluation) => (
                   <tr key={evaluation.id} className="border-b hover:bg-gray-50">
                     <td className="p-4 font-mono text-sm">{getDomainName(evaluation.domainId)}</td>
                     <td className="p-4">{evaluation.tool}</td>
@@ -151,7 +152,7 @@ const EvaluationSection: React.FC<EvaluationSectionProps> = ({
               </tbody>
             </table>
             
-            {evaluations.length === 0 && (
+            {(!Array.isArray(evaluations) || evaluations.length === 0) && (
               <div className="text-center py-8 text-gray-500">
                 Aucune évaluation enregistrée. Ajoutez une évaluation ci-dessus.
               </div>
